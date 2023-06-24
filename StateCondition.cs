@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Netcode;
 using UnityEngine;
@@ -9,9 +10,10 @@ namespace AlienFarmer.Utility.StateMachine
     {
         public string Key => _key;
         [SerializeField] private string _key;
-        public bool isChainCondition;
+        public StateCondition chainedCondition;
 
-        public bool Value => _networkVariable.Value;
+        public bool Value => chainedCondition != null ? chainedCondition.Value && SelfValue : SelfValue;
+        public bool SelfValue => _networkVariable.Value;
         private NetworkVariable<bool> _networkVariable = new NetworkVariable<bool>();
         private Action<StateCondition, bool> _onValueChanged;
 
