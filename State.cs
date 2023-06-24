@@ -77,6 +77,16 @@ namespace AlienFarmer.Utility.StateMachine
             _isCurrent = true;
         }
 
+        internal virtual void StartUpdate()
+        {
+
+        }
+
+        internal virtual void StopUpdate()
+        {
+
+        }
+
         internal virtual void BackwardEnter()
         {
             _isCurrent = true;
@@ -85,12 +95,14 @@ namespace AlienFarmer.Utility.StateMachine
         internal virtual void ForwardExit()
         {
             _isCurrent = false;
+            StopUpdate();
         }
 
         internal virtual void BackwardExit()
         {
             _isActive = false;
             _isCurrent = false;
+            StopUpdate();
         }
     }
 }

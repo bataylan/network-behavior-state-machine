@@ -11,7 +11,7 @@ namespace AlienFarmer.Utility.StateMachine
     public class StateMachine : NetworkBehaviour
     {
         private HashSet<State> _states;
-        private Dictionary<string, string> _stateChangedPaths;
+        private Dictionary<string, string> _stateChangeRecords;
         private HashSet<StatePathFinder.Connection> _paths;
         private HashSet<StateCondition> _conditions;
 
@@ -38,8 +38,6 @@ namespace AlienFarmer.Utility.StateMachine
             StartListenConditions();
             StartWithDefaultState();
         }
-
-
 
         private void PrepareStates()
         {
@@ -115,11 +113,19 @@ namespace AlienFarmer.Utility.StateMachine
         //WARNING! Recursive function
         private void SetForwardState(State sourceState, State state)
         {
-            state.ForwardEnter();
-            string sourceStateName = sourceState != null ? sourceState.stateName : "";
-            AddAndCheckLoopOnForward(sourceStateName, state.stateName);
+            //loop detected
+            if (state.IsActive)
+            {
+                Debug.Log("Loop Detected!");
+                RemoveLoopedRecord(state.stateName);
+            }
 
-            var forwardConnections = _paths.Where(x => string.Equals(x.sourceName, x.targetName));
+            //set state entered
+            state.ForwardEnter();
+            AddStateChangeRecord(sourceState, state);
+
+            //Check is there a available next state to move
+            var forwardConnections = _paths.Where(x => string.Equals(x.sourceName, state.stateName));
             foreach (var c in forwardConnections)
             {
                 var forwardState = _states.FirstOrDefault(x => string.Equals(x.stateName, c.targetName));
@@ -127,9 +133,39 @@ namespace AlienFarmer.Utility.StateMachine
                 {
                     state.ForwardExit();
                     SetForwardState(state, forwardState);
-                    break;
+                    return;
                 }
             }
+
+            //if there no state available to move, start update
+            state.StartUpdate();
+        }
+
+        //WARNING! Recursive function
+        private void SetBackwardState(State state)
+        {
+            //try find last record
+            var lastRecord = _stateChangeRecords.LastOrDefault();
+            if (string.Equals(lastRecord.Value, state.stateName))
+            {
+                throw new Exception("SetBackwardState state is not last active state!");
+            }
+
+            state.BackwardExit();
+
+            //get source state and remove from records
+            var backwardTargetState = GetStateByName(lastRecord.Key);
+            backwardTargetState.BackwardEnter();
+            RemoveStateChangeRecord(backwardTargetState);
+            
+            if (backwardTargetState.condition.Value)
+            {
+                backwardTargetState.StartUpdate();
+                return;
+            }
+
+            //if condition not met, go backward again
+            SetBackwardState(backwardTargetState);
         }
 
         private void OnConditionValueChange(StateCondition condition, bool value)
@@ -137,28 +173,40 @@ namespace AlienFarmer.Utility.StateMachine
 
         }
 
-        public void AddAndCheckLoopOnForward(string sourceStateName, string targetStateName)
+        public void AddStateChangeRecord(State sourceState, State state)
         {
-            _stateChangedPaths.Add(sourceStateName, targetStateName);
-            bool isLoopDetected = _stateChangedPaths.ContainsKey(targetStateName);
-            if (isLoopDetected)
-            {
-                RemoveLoop(targetStateName);
-            }
+            string sourceStateName = sourceState != null ? sourceState.stateName : "";
+            _stateChangeRecords.Add(sourceStateName, state.stateName);
         }
 
-        private void RemoveLoop(string targetStateName)
+        public void RemoveStateChangeRecord(State sourceState)
+        {
+            _stateChangeRecords.Remove(sourceState.stateName);
+        }
+
+        private void RemoveLoopedRecord(string targetStateName)
         {
             string lastTargetName = "";
             while (!string.Equals(lastTargetName, targetStateName))
             {
                 string sourceStateName = lastTargetName;
-                if (_stateChangedPaths.ContainsKey(sourceStateName))
+                if (_stateChangeRecords.ContainsKey(sourceStateName))
                 {
-                    lastTargetName = _stateChangedPaths.GetValueOrDefault(sourceStateName);
-                    _stateChangedPaths.Remove(sourceStateName);
+                    lastTargetName = _stateChangeRecords.GetValueOrDefault(sourceStateName);
+                    _stateChangeRecords.Remove(sourceStateName);
                 }
             }
+        }
+
+        private State GetStateByName(string stateName)
+        {
+            var state = _states.FirstOrDefault(x => string.Equals(x.stateName, stateName));
+            if (state == null)
+            {
+                throw new Exception("State not found!");
+            }
+
+            return state;
         }
     }
 }
