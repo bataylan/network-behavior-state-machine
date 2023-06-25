@@ -11,7 +11,6 @@ namespace AlienFarmer.Utility.StateMachine
         public bool isDefault;
         public string stateName;
         public StateCondition condition;
-        public bool isChainedToCondition;
         public StateCondition[] effects;
 
 
@@ -20,24 +19,6 @@ namespace AlienFarmer.Utility.StateMachine
         private bool _isActive;
         public bool IsCurrent => _isCurrent;
         private bool _isCurrent;
-
-        private void Awake()
-        {
-            condition.ListenCondition(OnConditionChange);
-        }
-
-        public void ActivateDefault()
-        {
-            if (!isDefault)
-            {
-                throw new Exception("Trying to activate not-default state!");
-            }
-        }
-
-        public virtual void EnsureInit(Action<State, StateCondition> onNotCurrentStateConditionTrigger)
-        {
-            _onNotCurrentStateConditionTrigger = onNotCurrentStateConditionTrigger;
-        }
 
         private void OnConditionChange(StateCondition condition, bool newValue)
         {

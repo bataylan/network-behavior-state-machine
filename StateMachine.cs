@@ -26,7 +26,9 @@ namespace AlienFarmer.Utility.StateMachine
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
-            UpdateManager.Manager.AddFinish(LateNetworkSpawn, 0);
+            //UpdateManager.Manager.AddFinish(LateNetworkSpawn, 0);
+            StartListenConditions();
+            StartWithDefaultState();
         }
 
         //Start working after network spawn
@@ -157,7 +159,7 @@ namespace AlienFarmer.Utility.StateMachine
             var backwardTargetState = GetStateByName(lastRecord.Key);
             backwardTargetState.BackwardEnter();
             RemoveStateChangeRecord(backwardTargetState);
-            
+
             if (backwardTargetState.condition.Value)
             {
                 backwardTargetState.StartUpdate();
@@ -170,7 +172,36 @@ namespace AlienFarmer.Utility.StateMachine
 
         private void OnConditionValueChange(StateCondition condition, bool value)
         {
+            //if state's condition met, check state effects for forward movement
+            var currentState = GetCurrentState();
+            if (currentState.condition.Value)
+            {
+                var matchedEffect = currentState.effects.FirstOrDefault(x => x == condition);
+                if (matchedEffect == null || !matchedEffect.Value)
+                    return;
 
+                var forwardPaths = _paths.Where(x => string.Equals(x.sourceName, currentState.name));
+                foreach (var p in forwardPaths)
+                {
+                    var targetState = GetStateByName(p.targetName);
+                    if (targetState.condition == matchedEffect)
+                    {
+                        SetForwardState(currentState, targetState);
+                        return;
+                    }
+                }
+
+                return;
+            }
+
+            //if state condition is not met, start backward movement
+            SetBackwardState(currentState);
+        }
+
+        private State GetCurrentState()
+        {
+            var lastRecord = _stateChangeRecords.LastOrDefault();
+            return GetStateByName(lastRecord.Value);
         }
 
         public void AddStateChangeRecord(State sourceState, State state)
