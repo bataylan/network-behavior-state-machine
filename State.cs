@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
+using UnityEditor;
 using UnityEngine;
 
 namespace AlienFarmer.Utility.StateMachine
@@ -19,23 +20,6 @@ namespace AlienFarmer.Utility.StateMachine
         private bool _isActive;
         public bool IsCurrent => _isCurrent;
         private bool _isCurrent;
-
-        private void OnConditionChange(StateCondition condition, bool newValue)
-        {
-            if (!_isActive)
-            {
-                return;
-            }
-
-            if (!_isCurrent && !newValue)
-            {
-                _onNotCurrentStateConditionTrigger.Invoke(this, condition);
-            }
-            else if (_isCurrent)
-            {
-
-            }
-        }
 
         internal bool CheckData()
         {
@@ -85,5 +69,13 @@ namespace AlienFarmer.Utility.StateMachine
             _isCurrent = false;
             StopUpdate();
         }
+
+#if UNITY_EDITOR
+        void OnDrawGizmos()
+        {
+            if (_isCurrent)
+                Handles.Label(transform.position + (2 * Vector3.up), stateName);
+        }
+#endif
     }
 }

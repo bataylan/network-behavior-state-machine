@@ -21,6 +21,7 @@ namespace AlienFarmer.Utility.StateMachine
             PrepareConditions();
             PrepareStates();
             PreparePath();
+            _stateChangeRecords = new Dictionary<string, string>();
         }
 
         public override void OnNetworkSpawn()
@@ -122,6 +123,12 @@ namespace AlienFarmer.Utility.StateMachine
                 RemoveLoopedRecord(state.stateName);
             }
 
+            Debug.Log("SetForwardState " + (sourceState == null ? "empty" : sourceState.stateName) + " -> " + state.stateName);
+            if(sourceState)
+            {
+                sourceState.ForwardExit();
+            }
+
             //set state entered
             state.ForwardEnter();
             AddStateChangeRecord(sourceState, state);
@@ -148,7 +155,7 @@ namespace AlienFarmer.Utility.StateMachine
         {
             //try find last record
             var lastRecord = _stateChangeRecords.LastOrDefault();
-            if (string.Equals(lastRecord.Value, state.stateName))
+            if (!string.Equals(lastRecord.Value, state.stateName))
             {
                 throw new Exception("SetBackwardState state is not last active state!");
             }
@@ -180,7 +187,7 @@ namespace AlienFarmer.Utility.StateMachine
                 if (matchedEffect == null || !matchedEffect.Value)
                     return;
 
-                var forwardPaths = _paths.Where(x => string.Equals(x.sourceName, currentState.name));
+                var forwardPaths = _paths.Where(x => string.Equals(x.sourceName, currentState.stateName));
                 foreach (var p in forwardPaths)
                 {
                     var targetState = GetStateByName(p.targetName);
@@ -206,7 +213,7 @@ namespace AlienFarmer.Utility.StateMachine
 
         public void AddStateChangeRecord(State sourceState, State state)
         {
-            string sourceStateName = sourceState != null ? sourceState.stateName : "";
+            string sourceStateName = sourceState != null ? sourceState.stateName : "empty";
             _stateChangeRecords.Add(sourceStateName, state.stateName);
         }
 

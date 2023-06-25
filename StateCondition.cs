@@ -21,15 +21,36 @@ namespace AlienFarmer.Utility.StateMachine
         private Action<StateCondition, bool> _onValueChanged;
 
         private bool _initted;
+        private bool _isDefault;
 
         public void ListenCondition(Action<StateCondition, bool> action)
         {
             _onValueChanged += action;
         }
 
+        public void SetAsDefault(State state)
+        {
+            if(!state.isDefault)
+            {
+                throw new Exception("State Condition can't be set default by not default state!");
+            }
+
+            _isDefault = true;
+            _networkVariable.Value = true;
+        }
+
+        public void ChangeValue(bool value)
+        {
+            if (value == _networkVariable.Value)
+                return;
+
+            _networkVariable.Value = value;
+            TriggerOnValueChanged(!value, value);
+        }
+
         private void TriggerOnValueChanged(bool previousValue, bool newValue)
         {
-            if (previousValue == newValue)
+            if (_isDefault || previousValue == newValue)
                 return;
 
             if (_onValueChanged != null)
@@ -42,7 +63,7 @@ namespace AlienFarmer.Utility.StateMachine
         {
             base.OnNetworkSpawn();
             _initted = true;
-            _networkVariable.OnValueChanged += TriggerOnValueChanged;
+            //_networkVariable.OnValueChanged += TriggerOnValueChanged;
         }
 
         internal bool CheckData()
