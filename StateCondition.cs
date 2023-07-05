@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -30,7 +28,7 @@ namespace AlienFarmer.Utility.StateMachine
 
         public void SetAsDefault(State state)
         {
-            if(!state.isDefault)
+            if (!state.isDefault)
             {
                 throw new Exception("State Condition can't be set default by not default state!");
             }

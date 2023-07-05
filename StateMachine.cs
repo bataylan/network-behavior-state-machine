@@ -1,15 +1,14 @@
-using AlienFarmer.Manager;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 namespace AlienFarmer.Utility.StateMachine
 {
     public class StateMachine : NetworkBehaviour
     {
+        public bool startOnNetworkSpawn;
         private HashSet<State> _states;
         private Dictionary<string, string> _stateChangeRecords;
         private HashSet<StatePathFinder.Connection> _paths;
@@ -18,26 +17,39 @@ namespace AlienFarmer.Utility.StateMachine
         //Prepare fields before network spawn
         void Awake()
         {
-            PrepareConditions();
-            PrepareStates();
-            PreparePath();
+            Prepare();
             _stateChangeRecords = new Dictionary<string, string>();
         }
 
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
-            //UpdateManager.Manager.AddFinish(LateNetworkSpawn, 0);
-            StartListenConditions();
-            StartWithDefaultState();
-        }
-
-        //Start working after network spawn
-        private void LateNetworkSpawn(bool success, object data)
-        {
-            if (!success)
+            if (!startOnNetworkSpawn)
                 return;
 
+            StartStates();
+        }
+
+        public void StartStateMachine()
+        {
+            if (startOnNetworkSpawn)
+            {
+                Debug.Log("StateMachine already started on OnNetworkSpawn");
+                return;
+            }
+
+            StartStates();
+        }
+
+        private void Prepare()
+        {
+            PrepareConditions();
+            PrepareStates();
+            PreparePath();
+        }
+
+        private void StartStates()
+        {
             StartListenConditions();
             StartWithDefaultState();
         }
@@ -124,7 +136,7 @@ namespace AlienFarmer.Utility.StateMachine
             }
 
             Debug.Log("SetForwardState " + (sourceState == null ? "empty" : sourceState.stateName) + " -> " + state.stateName);
-            if(sourceState)
+            if (sourceState)
             {
                 sourceState.ForwardExit();
             }
