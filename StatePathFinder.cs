@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace AlienFarmer.Utility.StateMachine
+namespace SimpleU.StateMachine.NetworkChainedStateMachine
 {
     public class StatePathFinder
     {

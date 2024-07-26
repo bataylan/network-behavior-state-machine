@@ -3,7 +3,7 @@ using Unity.Netcode;
 using UnityEditor;
 using UnityEngine;
 
-namespace AlienFarmer.Utility.StateMachine
+namespace SimpleU.StateMachine.NetworkChainedStateMachine
 {
     public abstract class State : NetworkBehaviour
     {
@@ -40,20 +40,14 @@ namespace AlienFarmer.Utility.StateMachine
             _isCurrent = true;
         }
 
-        internal virtual void StartUpdate()
-        {
-
-        }
-
-        internal virtual void StopUpdate()
-        {
-
-        }
-
         internal virtual void BackwardEnter()
         {
             _isCurrent = true;
         }
+
+        internal virtual void StartUpdate() { }
+
+        internal virtual void StopUpdate() { }
 
         internal virtual void ForwardExit()
         {

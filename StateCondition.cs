@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace AlienFarmer.Utility.StateMachine
+namespace SimpleU.StateMachine.NetworkChainedStateMachine
 {
     //Conditions are unique for states
     public class StateCondition : NetworkBehaviour

@@ -4,7 +4,7 @@ using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace AlienFarmer.Utility.StateMachine
+namespace SimpleU.StateMachine.NetworkChainedStateMachine
 {
     public class StateMachine : NetworkBehaviour
     {
