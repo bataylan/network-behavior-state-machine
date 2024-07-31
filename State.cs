@@ -33,7 +33,7 @@ namespace SimpleU.StateMachine.NetworkChainedStateMachine
         {
             if (_isActive)
             {
-                Debug.Log("Loop detected! " + gameObject.name);
+                Debug.LogError("Loop detected! " + gameObject.name);
             }
 
             _isActive = true;
